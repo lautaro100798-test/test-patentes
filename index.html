@@ -3,77 +3,111 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Recuperá o reportá patentes de vehículos perdidas durante lluvias en Santa Fe. Plataforma colaborativa gratuita." />
-  <title>Patentes Perdidas Santa Fe</title>
+  <meta name="description" content="Plataforma cívica gratuita para recuperar patentes de vehículos perdidas durante lluvias en Santa Fe y otras ciudades de Argentina." />
+  <meta name="theme-color" content="#c9a84c" />
+  <!-- Open Graph para compartir en redes -->
+  <meta property="og:title" content="Patentes Perdidas — Plataforma Cívica" />
+  <meta property="og:description" content="Recuperá tu patente perdida. Plataforma colaborativa gratuita para Santa Fe y Argentina." />
+  <meta property="og:type" content="website" />
+  <title>Patentes Perdidas — Plataforma Cívica Digital</title>
   <link rel="stylesheet" href="styles.css" />
+  <!-- Leaflet.js para mapa -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- ===== MATCH BANNER ===== -->
+  <!-- ===== MATCH BANNER (top fixed) ===== -->
   <div id="matchBanner" class="match-banner hidden" role="alert" aria-live="polite">
     <div class="match-banner__inner">
       <span class="match-banner__icon">🎯</span>
-      <p class="match-banner__text">¡Encontramos una posible coincidencia con tu patente!</p>
-      <button class="match-banner__close" onclick="closeBanner()" aria-label="Cerrar aviso">✕</button>
+      <p class="match-banner__text">¡Hay coincidencias activas! Revisá las tarjetas resaltadas abajo.</p>
+      <button class="match-banner__close" onclick="APP.ui.closeBanner()" aria-label="Cerrar aviso">✕</button>
     </div>
   </div>
 
   <!-- ===== HEADER ===== -->
-  <header class="header">
+  <header class="header" id="mainHeader">
     <div class="container header__inner">
       <div class="header__brand">
-        <div class="header__logo-mark">
-          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <div class="header__logo-mark" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="2" y="8" width="32" height="20" rx="4" stroke="#c9a84c" stroke-width="2.5"/>
-            <rect x="6" y="12" width="10" height="6" rx="1.5" fill="#c9a84c" opacity="0.25"/>
-            <rect x="20" y="12" width="10" height="6" rx="1.5" fill="#c9a84c" opacity="0.25"/>
+            <rect x="6" y="12" width="10" height="6" rx="1.5" fill="#c9a84c" opacity="0.3"/>
+            <rect x="20" y="12" width="10" height="6" rx="1.5" fill="#c9a84c" opacity="0.3"/>
             <circle cx="8" cy="28" r="3" fill="#c9a84c"/>
             <circle cx="28" cy="28" r="3" fill="#c9a84c"/>
-            <path d="M6 18 L10 14" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M11 18 H25" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
         </div>
         <div>
           <h1 class="header__title">Patentes Perdidas</h1>
-          <span class="header__subtitle">Santa Fe · Red Comunitaria</span>
+          <div class="header__city-selector">
+            <select id="citySelector" class="city-select" aria-label="Seleccionar ciudad" onchange="APP.city.change(this.value)">
+              <option value="santa_fe">📍 Santa Fe</option>
+              <option value="rosario">📍 Rosario</option>
+              <option value="buenos_aires">📍 Buenos Aires</option>
+              <option value="cordoba">📍 Córdoba</option>
+              <option value="otra">📍 Otra ciudad</option>
+            </select>
+          </div>
         </div>
       </div>
-      <nav class="header__nav" aria-label="Navegación principal">
+      <nav class="header__nav" aria-label="Navegación">
+        <button class="header__nav-btn" onclick="APP.ui.scrollTo('mapa')" aria-label="Ver mapa">🗺️ Mapa</button>
+        <button class="header__nav-btn" onclick="APP.ui.scrollTo('sobre')" aria-label="Sobre el proyecto">Sobre</button>
         <a href="#publicar" class="btn btn--gold btn--sm">+ Publicar</a>
       </nav>
+      <!-- Hamburger mobile -->
+      <button class="header__hamburger" id="hamburgerBtn" onclick="APP.ui.toggleMobileMenu()" aria-label="Menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <!-- Mobile menu -->
+    <div class="mobile-menu hidden" id="mobileMenu">
+      <button onclick="APP.ui.scrollTo('mapa'); APP.ui.toggleMobileMenu()">🗺️ Mapa</button>
+      <button onclick="APP.ui.scrollTo('sobre'); APP.ui.toggleMobileMenu()">Sobre el proyecto</button>
+      <button onclick="APP.ui.scrollTo('alianzas'); APP.ui.toggleMobileMenu()">Trabajemos juntos</button>
+      <a href="#publicar" class="btn btn--gold btn--sm" onclick="APP.ui.toggleMobileMenu()">+ Publicar patente</a>
     </div>
   </header>
 
   <!-- ===== HERO ===== -->
   <section class="hero" aria-labelledby="hero-heading">
+    <div class="hero__bg-pattern" aria-hidden="true"></div>
     <div class="container hero__inner">
       <div class="hero__text">
-        <div class="hero__badge">🌧️ Lluvias Santa Fe 2025</div>
+        <div class="hero__badge">
+          <span class="hero__badge-dot"></span>
+          Plataforma activa · <span id="heroCityName">Santa Fe</span>
+        </div>
         <h2 id="hero-heading" class="hero__heading">
           ¿Perdiste o<br /><em>encontraste</em> una patente?
         </h2>
         <p class="hero__desc">
-          Conectamos a quienes perdieron su patente con quienes la encontraron. Simple, rápido y gratuito.
+          Plataforma cívica gratuita. Conectamos a quienes perdieron su patente con quienes la encontraron. Sin burocracia, sin costos.
         </p>
         <div class="hero__actions">
-          <a href="#publicar" class="btn btn--gold btn--lg">Publicar ahora</a>
+          <a href="#publicar" class="btn btn--gold btn--lg">
+            <span>Publicar ahora</span>
+          </a>
           <a href="#buscar" class="btn btn--ghost btn--lg">Buscar patente</a>
         </div>
       </div>
-      <div class="hero__stats" aria-label="Estadísticas">
+      <div class="hero__stats" aria-label="Estadísticas de impacto">
         <div class="stat-card">
           <span class="stat-card__number" id="statTotal">0</span>
           <span class="stat-card__label">Publicaciones</span>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-card--highlight">
           <span class="stat-card__number" id="statMatches">0</span>
           <span class="stat-card__label">Coincidencias</span>
         </div>
         <div class="stat-card">
-          <span class="stat-card__number" id="statFound">0</span>
-          <span class="stat-card__label">Recuperadas</span>
+          <span class="stat-card__number" id="statResolved">0</span>
+          <span class="stat-card__label">Recuperadas ✓</span>
         </div>
       </div>
     </div>
@@ -85,24 +119,24 @@
       <h2 id="how-heading" class="section-title">¿Cómo funciona?</h2>
       <div class="steps">
         <div class="step">
-          <div class="step__icon" aria-hidden="true">📝</div>
-          <div class="step__num">1</div>
+          <div class="step__icon">📝</div>
+          <div class="step__num" aria-hidden="true">1</div>
           <h3 class="step__title">Publicás la patente</h3>
-          <p class="step__desc">Ingresá el número de patente, si la perdiste o la encontraste, tu zona y un contacto.</p>
+          <p class="step__desc">Ingresá el número, si la perdiste o encontraste, zona y contacto. Lleva menos de 30 segundos.</p>
         </div>
         <div class="step__arrow" aria-hidden="true">→</div>
         <div class="step">
-          <div class="step__icon" aria-hidden="true">🔍</div>
-          <div class="step__num">2</div>
-          <h3 class="step__title">Buscamos coincidencias</h3>
-          <p class="step__desc">El sistema compara automáticamente y te avisa si hay una patente idéntica con estado opuesto.</p>
+          <div class="step__icon">🔍</div>
+          <div class="step__num" aria-hidden="true">2</div>
+          <h3 class="step__title">Matching automático</h3>
+          <p class="step__desc">El sistema detecta coincidencias al instante y te avisa si encontró la misma patente con estado opuesto.</p>
         </div>
         <div class="step__arrow" aria-hidden="true">→</div>
         <div class="step">
-          <div class="step__icon" aria-hidden="true">📞</div>
-          <div class="step__num">3</div>
-          <h3 class="step__title">Contactás a la persona</h3>
-          <p class="step__desc">Usás el botón de contacto de la tarjeta para comunicarte directamente.</p>
+          <div class="step__icon">📲</div>
+          <div class="step__num" aria-hidden="true">3</div>
+          <h3 class="step__title">Contactás y difundís</h3>
+          <p class="step__desc">Contactás directamente o compartís en grupos de WhatsApp para ampliar el alcance.</p>
         </div>
       </div>
     </div>
@@ -112,261 +146,422 @@
   <main class="main-content">
     <div class="container main-grid">
 
-      <!-- FORMULARIO -->
-      <section id="publicar" class="card form-section" aria-labelledby="form-heading">
-        <div class="card__header">
-          <h2 id="form-heading" class="card__title">Publicar patente</h2>
-          <p class="card__desc">Completá el formulario y publicá en segundos.</p>
-        </div>
-
-        <form id="patenteForm" novalidate>
-
-          <div class="form-group">
-            <label class="form-label" for="inputPatente">
-              Número de patente <span class="required" aria-hidden="true">*</span>
-            </label>
-            <input
-              type="text"
-              id="inputPatente"
-              class="form-input"
-              placeholder="Ej: ABC123 o AB123CD"
-              maxlength="10"
-              autocomplete="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              aria-required="true"
-              aria-describedby="patenteHelp patenteError"
-            />
-            <span id="patenteHelp" class="form-hint">Sin espacios ni guiones. Se normalizará automáticamente.</span>
-            <span id="patenteError" class="form-error" role="alert" aria-live="polite"></span>
+      <!-- ── FORMULARIO ── -->
+      <aside class="form-aside">
+        <section id="publicar" class="card form-section" aria-labelledby="form-heading">
+          <div class="card__header">
+            <h2 id="form-heading" class="card__title">Publicar patente</h2>
+            <p class="card__desc">Completá y publicá en segundos.</p>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="inputEstado">
-              Estado <span class="required" aria-hidden="true">*</span>
-            </label>
-            <div class="select-wrapper">
-              <select id="inputEstado" class="form-input form-select" aria-required="true" aria-describedby="estadoError">
-                <option value="" disabled selected>Seleccioná una opción</option>
-                <option value="Perdida">🔴 La perdí — Busco quién la encontró</option>
-                <option value="Encontrada">🟢 La encontré — Busco al dueño</option>
-              </select>
+          <form id="patenteForm" novalidate autocomplete="off">
+
+            <!-- Patente -->
+            <div class="form-group">
+              <label class="form-label" for="inputPatente">
+                Patente <span class="required">*</span>
+              </label>
+              <div class="patente-input-wrapper">
+                <input
+                  type="text" id="inputPatente" class="form-input patente-input"
+                  placeholder="ABC123" maxlength="10"
+                  autocapitalize="characters" spellcheck="false"
+                  aria-required="true" aria-describedby="patenteHelp patenteError"
+                />
+                <div class="patente-preview" id="patentePreview" aria-hidden="true"></div>
+              </div>
+              <span id="patenteHelp" class="form-hint">Formato viejo (ABC123) o nuevo (AB123CD).</span>
+              <span id="patenteError" class="form-error" role="alert"></span>
             </div>
-            <span id="estadoError" class="form-error" role="alert" aria-live="polite"></span>
+
+            <!-- Estado -->
+            <div class="form-group">
+              <label class="form-label">Estado <span class="required">*</span></label>
+              <div class="estado-toggle" role="group" aria-label="Estado de la patente">
+                <button type="button" class="estado-btn" data-value="Perdida" id="btnPerdida"
+                  onclick="APP.form.selectEstado('Perdida')" aria-pressed="false">
+                  🔴 La perdí
+                </button>
+                <button type="button" class="estado-btn" data-value="Encontrada" id="btnEncontrada"
+                  onclick="APP.form.selectEstado('Encontrada')" aria-pressed="false">
+                  🟢 La encontré
+                </button>
+              </div>
+              <input type="hidden" id="inputEstado" />
+              <span id="estadoError" class="form-error" role="alert"></span>
+            </div>
+
+            <!-- Ciudad (hereda del selector del header, editable) -->
+            <div class="form-group">
+              <label class="form-label" for="inputCiudad">Ciudad</label>
+              <input type="text" id="inputCiudad" class="form-input"
+                placeholder="Ej: Santa Fe" aria-describedby="ciudadHelp" />
+              <span id="ciudadHelp" class="form-hint">Se completa automáticamente con tu ciudad seleccionada.</span>
+            </div>
+
+            <!-- Zona -->
+            <div class="form-group">
+              <label class="form-label" for="inputZona">Zona / Barrio</label>
+              <input type="text" id="inputZona" class="form-input"
+                placeholder="Ej: Centro, Guadalupe, Sur…" />
+            </div>
+
+            <!-- Geolocalización -->
+            <div class="form-group">
+              <button type="button" class="btn btn--geo" id="geoBtn" onclick="APP.geo.requestLocation()">
+                <span id="geoBtnText">📍 Usar mi ubicación</span>
+              </button>
+              <span id="geoStatus" class="form-hint geo-status"></span>
+            </div>
+
+            <!-- Contacto -->
+            <div class="form-group">
+              <label class="form-label" for="inputContacto">
+                Contacto <span class="required">*</span>
+              </label>
+              <input type="text" id="inputContacto" class="form-input"
+                placeholder="Email o WhatsApp (342-000-0000)"
+                aria-required="true" aria-describedby="contactoHelp contactoError" />
+              <span id="contactoHelp" class="form-hint">Solo visible para quienes quieran contactarte.</span>
+              <span id="contactoError" class="form-error" role="alert"></span>
+            </div>
+
+            <!-- Notificaciones opt-in -->
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="inputNotify" class="checkbox-input" />
+                <span class="checkbox-custom" aria-hidden="true"></span>
+                <span>🔔 Avisarme si aparece mi patente</span>
+              </label>
+            </div>
+
+            <div class="form-trust">
+              <span>🔒</span>
+              <p>Plataforma colaborativa. Verificá la información antes de contactar.</p>
+            </div>
+
+            <button type="submit" class="btn btn--gold btn--full btn--lg" id="submitBtn">
+              <span class="btn__text">Publicar patente</span>
+              <span class="btn__loader" aria-hidden="true"></span>
+            </button>
+
+          </form>
+
+          <!-- Estado de éxito post-submit -->
+          <div id="successMsg" class="success-msg hidden" role="status">
+            <div class="success-msg__icon">✅</div>
+            <h3>¡Publicado!</h3>
+            <p id="successMatchText"></p>
+            <div class="success-actions">
+              <button class="btn btn--gold btn--sm" id="successShareBtn">📲 Compartir en WhatsApp</button>
+              <button class="btn btn--ghost btn--sm" onclick="APP.form.reset()">Publicar otra</button>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="inputZona">Zona / Barrio</label>
-            <input
-              type="text"
-              id="inputZona"
-              class="form-input"
-              placeholder="Ej: Centro, Sur, Guadalupe…"
-              aria-describedby="zonaHelp"
-            />
-            <span id="zonaHelp" class="form-hint">Ayuda a otros a orientarse geográficamente.</span>
+        </section>
+
+        <!-- Widget notificaciones activas -->
+        <div class="notify-widget hidden" id="notifyWidget">
+          <div class="notify-widget__inner">
+            <span>🔔</span>
+            <div>
+              <strong>Alerta activa</strong>
+              <p id="notifyWidgetText">Monitoreando tu patente…</p>
+            </div>
+            <button onclick="APP.notify.clearAll()" aria-label="Cancelar alertas">✕</button>
           </div>
-
-          <div class="form-group">
-            <label class="form-label" for="inputContacto">
-              Contacto (email o teléfono) <span class="required" aria-hidden="true">*</span>
-            </label>
-            <input
-              type="text"
-              id="inputContacto"
-              class="form-input"
-              placeholder="Ej: tucorreo@gmail.com o 342-000-0000"
-              aria-required="true"
-              aria-describedby="contactoHelp contactoError"
-            />
-            <span id="contactoHelp" class="form-hint">Solo lo verá quien quiera contactarte.</span>
-            <span id="contactoError" class="form-error" role="alert" aria-live="polite"></span>
-          </div>
-
-          <div class="form-trust" role="note">
-            <span class="form-trust__icon" aria-hidden="true">🔒</span>
-            <p>Esta es una plataforma colaborativa. Verificá la información antes de contactar.</p>
-          </div>
-
-          <button type="submit" class="btn btn--gold btn--full btn--lg" id="submitBtn">
-            <span class="btn__text">Publicar patente</span>
-            <span class="btn__loader" aria-hidden="true"></span>
-          </button>
-
-        </form>
-
-        <!-- SUCCESS MESSAGE -->
-        <div id="successMsg" class="success-msg hidden" role="status" aria-live="polite">
-          <div class="success-msg__icon" aria-hidden="true">✅</div>
-          <h3>¡Publicado exitosamente!</h3>
-          <p id="successMatchText"></p>
-          <button class="btn btn--ghost btn--sm" onclick="resetForm()">Publicar otra</button>
         </div>
+      </aside>
 
-      </section>
-
-      <!-- BUSCADOR Y LISTADO -->
+      <!-- ── LISTADO ── -->
       <section id="buscar" class="listings-section" aria-labelledby="listings-heading">
 
+        <!-- Header de la sección -->
         <div class="listings-header">
           <h2 id="listings-heading" class="listings-title">Publicaciones activas</h2>
-          <div class="search-wrapper">
-            <label for="searchInput" class="sr-only">Buscar por patente</label>
-            <span class="search-icon" aria-hidden="true">🔍</span>
-            <input
-              type="search"
-              id="searchInput"
-              class="search-input"
-              placeholder="Buscar patente…"
-              autocomplete="off"
-              spellcheck="false"
-              aria-label="Buscar patente en tiempo real"
-            />
-          </div>
-          <div class="filter-tabs" role="tablist" aria-label="Filtrar por estado">
-            <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">Todas</button>
-            <button class="filter-tab" data-filter="Perdida" role="tab" aria-selected="false">Perdidas</button>
-            <button class="filter-tab" data-filter="Encontrada" role="tab" aria-selected="false">Encontradas</button>
+          <div class="listings-controls">
+            <div class="search-wrapper">
+              <span class="search-icon" aria-hidden="true">🔍</span>
+              <input type="search" id="searchInput" class="search-input"
+                placeholder="Buscar patente…" autocomplete="off" spellcheck="false"
+                aria-label="Buscar patente en tiempo real" />
+            </div>
+            <div class="filter-tabs" role="tablist" aria-label="Filtrar">
+              <button class="filter-tab active" data-filter="all" role="tab" aria-selected="true">Todas</button>
+              <button class="filter-tab" data-filter="Perdida" role="tab" aria-selected="false">🔴 Perdidas</button>
+              <button class="filter-tab" data-filter="Encontrada" role="tab" aria-selected="false">🟢 Encontradas</button>
+              <button class="filter-tab" data-filter="Resuelta" role="tab" aria-selected="false">✅ Resueltas</button>
+            </div>
           </div>
         </div>
 
-        <!-- MATCH ALERT dentro de listado -->
-        <div id="matchAlert" class="match-alert hidden" role="alert" aria-live="polite">
-          <span class="match-alert__icon" aria-hidden="true">🎯</span>
+        <!-- Banner de match en sección -->
+        <div id="matchAlert" class="match-alert hidden" role="alert">
+          <span class="match-alert__icon">🎯</span>
           <div>
-            <strong>¡Posible coincidencia encontrada!</strong>
-            <p>Hay una patente con estado opuesto que coincide. Revisá las tarjetas resaltadas.</p>
+            <strong>¡Coincidencia encontrada!</strong>
+            <p>Hay patentes con estados opuestos. Revisá las tarjetas resaltadas en dorado.</p>
           </div>
         </div>
 
-        <div id="cardGrid" class="card-grid" aria-label="Listado de patentes" aria-live="polite">
-          <!-- Cards generadas por JS -->
-        </div>
+        <!-- Grid de tarjetas -->
+        <div id="cardGrid" class="card-grid" aria-label="Listado de patentes" aria-live="polite"></div>
 
-        <div id="emptyState" class="empty-state hidden" aria-live="polite">
-          <div class="empty-state__icon" aria-hidden="true">🔎</div>
+        <!-- Estados vacío / loading -->
+        <div id="emptyState" class="empty-state hidden">
+          <div class="empty-state__icon">🔎</div>
+          <p class="empty-state__title">Sin resultados</p>
           <p class="empty-state__text">No hay publicaciones que coincidan con tu búsqueda.</p>
         </div>
-
-        <div id="loadingState" class="loading-state" aria-live="polite" aria-busy="true">
-          <div class="spinner" aria-hidden="true"></div>
+        <div id="loadingState" class="loading-state">
+          <div class="spinner"></div>
           <p>Cargando publicaciones…</p>
         </div>
 
       </section>
     </div>
+
+    <!-- ── MAPA ── -->
+    <section id="mapa" class="map-section" aria-labelledby="map-heading">
+      <div class="container">
+        <div class="map-header">
+          <h2 id="map-heading" class="section-title" style="margin-bottom:8px;">Mapa de registros</h2>
+          <p class="map-subtitle">🔴 Perdidas &nbsp; 🟢 Encontradas &nbsp; ⭐ Coincidencias</p>
+        </div>
+        <div id="mapContainer" class="map-container" aria-label="Mapa de patentes reportadas"></div>
+        <p class="map-hint">Los marcadores representan zonas aproximadas, no ubicaciones exactas.</p>
+      </div>
+    </section>
+
   </main>
 
-  <!-- ===== INTEGRATION GUIDE (collapsible) ===== -->
+  <!-- ===== SECCIÓN SOBRE EL PROYECTO ===== -->
+  <section id="sobre" class="about-section" aria-labelledby="about-heading">
+    <div class="container about-grid">
+      <div class="about-text">
+        <div class="about-label">Sobre el proyecto</div>
+        <h2 id="about-heading" class="about-heading">Infraestructura cívica digital para ciudades argentinas</h2>
+        <p>
+          Patentes Perdidas nació como respuesta concreta a un problema real: durante lluvias intensas en Santa Fe,
+          cientos de patentes de vehículos se desprenden y no existe un sistema centralizado para recuperarlas.
+        </p>
+        <p>
+          Esta plataforma opera como infraestructura pública digital: gratuita, abierta y centrada en la comunidad.
+          No reemplaza a los organismos oficiales — los complementa con velocidad y alcance comunitario.
+        </p>
+        <div class="about-disclaimer">
+          <span>⚠️</span>
+          <p><strong>Aviso:</strong> Esta es una plataforma colaborativa. No verificamos la identidad de los usuarios. Siempre confirmá la información antes de contactar a alguien.</p>
+        </div>
+        <div class="about-tech">
+          <span class="about-tech__label">Desarrollado por</span>
+          <a href="https://laestrategy.com" target="_blank" rel="noopener noreferrer" class="about-tech__link">
+            LAE Strategy — Sistemas basados en datos e IA
+          </a>
+        </div>
+      </div>
+      <div class="about-pillars">
+        <div class="pillar">
+          <div class="pillar__icon">🏙️</div>
+          <h3>Escalable</h3>
+          <p>Diseñado para expandirse a cualquier ciudad de Argentina con mínima configuración.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon">📊</div>
+          <h3>Basado en datos</h3>
+          <p>Genera información útil sobre zonas de riesgo, frecuencia de eventos y patrones urbanos.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon">🤝</div>
+          <h3>Comunitario</h3>
+          <p>El valor crece con cada publicación. Cuantos más participan, más rápido se recuperan las patentes.</p>
+        </div>
+        <div class="pillar">
+          <div class="pillar__icon">🔓</div>
+          <h3>Gratuito</h3>
+          <p>Siempre gratuito para el ciudadano. Sin publicidad, sin tracking de terceros.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ALIANZAS ===== -->
+  <section id="alianzas" class="partners-section" aria-labelledby="partners-heading">
+    <div class="container">
+      <div class="partners-header">
+        <div class="about-label" style="text-align:center; margin:0 auto 12px;">Trabajemos juntos</div>
+        <h2 id="partners-heading" class="partners-heading">¿Querés implementar esto<br />en tu ciudad u organización?</h2>
+        <p class="partners-desc">
+          Buscamos alianzas con municipios, ONGs, cámaras empresariales y organizaciones que quieran
+          ofrecer esta infraestructura a sus comunidades.
+        </p>
+      </div>
+      <div class="partners-grid">
+        <div class="partner-card">
+          <div class="partner-card__icon">🏛️</div>
+          <h3>Municipios</h3>
+          <p>Integrá esta plataforma como servicio digital oficial. Podemos conectarla con tus sistemas existentes.</p>
+          <ul class="partner-card__list">
+            <li>✓ Branding personalizado</li>
+            <li>✓ Dominio propio</li>
+            <li>✓ Datos para reporting</li>
+          </ul>
+        </div>
+        <div class="partner-card">
+          <div class="partner-card__icon">🌱</div>
+          <h3>ONGs y organizaciones</h3>
+          <p>Usá la plataforma como herramienta de impacto social medible. Te ayudamos con la implementación.</p>
+          <ul class="partner-card__list">
+            <li>✓ Setup gratuito</li>
+            <li>✓ Métricas de impacto</li>
+            <li>✓ Soporte técnico</li>
+          </ul>
+        </div>
+        <div class="partner-card partner-card--highlight">
+          <div class="partner-card__icon">🏢</div>
+          <h3>Empresas</h3>
+          <p>Asociá tu marca a una iniciativa cívica de alto impacto. Visibilidad genuina en la comunidad.</p>
+          <ul class="partner-card__list">
+            <li>✓ Mención institucional</li>
+            <li>✓ Datos de uso</li>
+            <li>✓ Co-branding</li>
+          </ul>
+        </div>
+      </div>
+      <div class="partners-cta">
+        <a href="mailto:hola@laestrategy.com?subject=Quiero implementar Patentes Perdidas en mi ciudad&body=Hola, me interesa implementar la plataforma en: "
+           class="btn btn--gold btn--lg" target="_blank">
+          Quiero implementarlo en mi ciudad →
+        </a>
+        <p class="partners-cta__sub">Respondemos en menos de 48hs.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== INTEGRATION GUIDE ===== -->
   <section class="guide-section" aria-labelledby="guide-heading">
     <div class="container">
-      <button class="guide-toggle" onclick="toggleGuide()" aria-expanded="false" aria-controls="guideContent">
-        <span class="guide-toggle__icon" aria-hidden="true">⚙️</span>
-        Instrucciones de conexión con Google Sheets
-        <span class="guide-toggle__arrow" aria-hidden="true">▾</span>
+      <button class="guide-toggle" onclick="APP.ui.toggleGuide()" aria-expanded="false" aria-controls="guideContent" id="guideToggleBtn">
+        <span>⚙️</span>
+        Guía de integración con Google Sheets
+        <span class="guide-toggle__arrow">▾</span>
       </button>
       <div id="guideContent" class="guide-content hidden">
 
         <div class="guide-block">
           <h3>1. Crear la hoja de cálculo</h3>
-          <p>Abrí Google Sheets y creá una hoja nueva con estas columnas en la fila 1:</p>
-          <div class="code-block">
-            <code>patente | estado | zona | contacto | fecha</code>
-          </div>
+          <p>Creá una hoja en Google Sheets con estas columnas exactas en la fila 1:</p>
+          <div class="code-block"><code>id | patente | estado | ciudad | zona | contacto | fecha | lat | lng | resuelto | notificar</code></div>
         </div>
 
         <div class="guide-block">
-          <h3>2. Crear el Apps Script</h3>
-          <p>En la hoja, andá a <strong>Extensiones → Apps Script</strong> y pegá este código:</p>
-          <div class="code-block code-block--lg">
-<pre><code>// =============================================
-//  PATENTES PERDIDAS SANTA FE — Apps Script API
-//  Pegá este código en tu Google Apps Script
-// =============================================
+          <h3>2. Apps Script — API completa</h3>
+          <div class="code-block code-block--lg"><pre><code>// ================================================
+//  PATENTES PERDIDAS v2 — Apps Script API REST
+//  Soporta: GET, POST, PATCH (resolver patente)
+// ================================================
 
-const SHEET_NAME = "Patentes"; // Nombre de tu hoja
+const SHEET_NAME = "Patentes";
 
 function doGet(e) {
-  const sheet = SpreadsheetApp
-    .getActiveSpreadsheet()
-    .getSheetByName(SHEET_NAME);
-
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
-  const rows = data.slice(1);
+  const rows = data.slice(1).filter(r => r[0]);
 
-  const records = rows
-    .filter(row => row[0]) // Ignorar filas vacías
-    .map(row => {
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = row[i] ?? "");
-      return obj;
-    });
+  const records = rows.map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = row[i] ?? "");
+    return obj;
+  });
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, data: records }))
-    .setMimeType(ContentService.MimeType.JSON);
+  // Filtrar por ciudad si se pasa como query param
+  const ciudad = e?.parameter?.ciudad;
+  const filtered = ciudad
+    ? records.filter(r => (r.ciudad || "").toLowerCase() === ciudad.toLowerCase())
+    : records;
+
+  return jsonResponse({ ok: true, data: filtered, total: filtered.length });
 }
 
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
-    const sheet = SpreadsheetApp
-      .getActiveSpreadsheet()
-      .getSheetByName(SHEET_NAME);
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
 
+    // PATCH: resolver patente
+    if (body._method === "PATCH" && body.id) {
+      return resolverPatente(sheet, body.id);
+    }
+
+    // POST: nueva publicación
     sheet.appendRow([
-      body.patente  ?? "",
-      body.estado   ?? "",
-      body.zona     ?? "",
-      body.contacto ?? "",
-      new Date().toLocaleString("es-AR")
+      body.id        ?? generateId(),
+      body.patente   ?? "",
+      body.estado    ?? "",
+      body.ciudad    ?? "Santa Fe",
+      body.zona      ?? "",
+      body.contacto  ?? "",
+      new Date().toLocaleString("es-AR"),
+      body.lat       ?? "",
+      body.lng       ?? "",
+      "false",         // resuelto
+      body.notificar ?? "false"
     ]);
 
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: true, message: "Guardado correctamente" }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ ok: true, message: "Publicado correctamente" });
 
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: false, error: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse({ ok: false, error: err.toString() }, 500);
   }
 }
-</code></pre>
-          </div>
+
+function resolverPatente(sheet, id) {
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const idCol = headers.indexOf("id");
+  const resolveCol = headers.indexOf("resuelto");
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idCol] == id) {
+      sheet.getRange(i + 1, resolveCol + 1).setValue("true");
+      return jsonResponse({ ok: true, message: "Marcado como resuelto" });
+    }
+  }
+  return jsonResponse({ ok: false, error: "ID no encontrado" });
+}
+
+function jsonResponse(obj, code) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+</code></pre></div>
         </div>
 
         <div class="guide-block">
-          <h3>3. Desplegar como Web App</h3>
+          <h3>3. Desplegar y conectar</h3>
           <ol>
-            <li>Click en <strong>Implementar → Nueva implementación</strong></li>
-            <li>Tipo: <strong>Aplicación web</strong></li>
-            <li>Ejecutar como: <strong>Yo mismo</strong></li>
-            <li>Quién tiene acceso: <strong>Cualquier usuario</strong></li>
-            <li>Click en <strong>Implementar</strong> y copiá la URL generada</li>
+            <li><strong>Apps Script → Implementar → Nueva implementación → Aplicación web</strong></li>
+            <li>Ejecutar como: <strong>Yo mismo</strong> | Acceso: <strong>Cualquier usuario</strong></li>
+            <li>Copiá la URL generada</li>
+            <li>En <code>app.js</code> reemplazá: <code>SHEETS_API_URL = "tu-url-aquí"</code></li>
+            <li>Cambiá: <code>USE_LOCAL_STORAGE = false</code></li>
           </ol>
         </div>
 
         <div class="guide-block">
-          <h3>4. Configurar en app.js</h3>
-          <p>En el archivo <code>app.js</code>, reemplazá el valor de:</p>
-          <div class="code-block">
-            <code>const SHEETS_API_URL = "TU_URL_DE_APPS_SCRIPT_AQUÍ";</code>
-          </div>
-        </div>
-
-        <div class="guide-block">
-          <h3>5. Publicar en GitHub Pages</h3>
+          <h3>4. Publicar en GitHub Pages</h3>
           <ol>
-            <li>Creá un repositorio en GitHub con los 3 archivos: <code>index.html</code>, <code>styles.css</code>, <code>app.js</code></li>
-            <li>Andá a <strong>Settings → Pages</strong></li>
-            <li>En <strong>Source</strong> seleccioná la rama <code>main</code> y la carpeta <code>/ (root)</code></li>
-            <li>GitHub te dará una URL tipo: <code>tu-usuario.github.io/patentes-perdidas</code></li>
-            <li>¡Listo! Tu app está publicada.</li>
+            <li>Subí los 3 archivos al repo (root)</li>
+            <li><strong>Settings → Pages → Source: main / (root)</strong></li>
+            <li>URL: <code>tu-usuario.github.io/nombre-repo</code></li>
           </ol>
         </div>
-
       </div>
     </div>
   </section>
@@ -374,21 +569,28 @@ function doPost(e) {
   <!-- ===== FOOTER ===== -->
   <footer class="footer">
     <div class="container footer__inner">
-      <div class="footer__brand">
-        <span class="footer__app-name">Patentes Perdidas Santa Fe</span>
-        <span class="footer__sep" aria-hidden="true">·</span>
-        <span class="footer__tagline">Plataforma colaborativa gratuita</span>
+      <div class="footer__left">
+        <div class="footer__brand">
+          <span class="footer__app-name">Patentes Perdidas</span>
+          <span class="footer__version">v2.0</span>
+        </div>
+        <p class="footer__tagline">Plataforma cívica digital · Argentina</p>
+        <p class="footer__cities">Santa Fe · Rosario · Buenos Aires · Córdoba · y más</p>
       </div>
-      <div class="footer__credit">
-        Proyecto desarrollado por
-        <a href="https://laestrategy.com" target="_blank" rel="noopener noreferrer" class="footer__link">
-          LAE Strategy
-        </a>
-        — Sistemas basados en datos e inteligencia artificial
+      <div class="footer__right">
+        <div class="footer__credit">
+          Desarrollado por
+          <a href="https://laestrategy.com" target="_blank" rel="noopener noreferrer" class="footer__link">
+            LAE Strategy
+          </a>
+        </div>
+        <p class="footer__credit-sub">Sistemas basados en datos e inteligencia artificial</p>
+        <p class="footer__legal">Plataforma colaborativa · Sin fines de lucro · Datos no verificados</p>
       </div>
     </div>
   </footer>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
